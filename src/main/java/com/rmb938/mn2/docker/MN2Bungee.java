@@ -3,12 +3,16 @@ package com.rmb938.mn2.docker;
 import com.mongodb.ServerAddress;
 import com.rabbitmq.client.Address;
 import com.rmb938.mn2.docker.db.database.*;
+import com.rmb938.mn2.docker.db.entity.MN2Server;
+import com.rmb938.mn2.docker.db.entity.MN2ServerType;
 import com.rmb938.mn2.docker.db.mongo.MongoDatabase;
 import com.rmb938.mn2.docker.db.rabbitmq.RabbitMQ;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.bson.types.ObjectId;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +89,7 @@ public class MN2Bungee extends Plugin {
         BungeeTypeLoader bungeeTypeLoader = new BungeeTypeLoader(mongoDatabase, pluginLoader, serverTypeLoader);
         NodeLoader nodeLoader = new NodeLoader(mongoDatabase, bungeeTypeLoader);
         bungeeLoader = new BungeeLoader(mongoDatabase, bungeeTypeLoader, nodeLoader);
+        ServerLoader serverLoader = new ServerLoader(mongoDatabase, nodeLoader, serverTypeLoader);
 
         bungee = bungeeLoader.loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
         if (bungee == null) {
@@ -92,6 +97,8 @@ public class MN2Bungee extends Plugin {
             getProxy().stop();
             return;
         }
+
+        getProxy().getServers().clear();
 
         getProxy().getScheduler().schedule(this, () -> {
             com.rmb938.mn2.docker.db.entity.MN2Bungee localBungee = bungeeLoader.loadEntity(bungee.get_id());
@@ -112,6 +119,25 @@ public class MN2Bungee extends Plugin {
             }
             bungee.setLastUpdate(System.currentTimeMillis());
             bungeeLoader.saveEntity(bungee);
+
+            ArrayList<ServerInfo> toRemove = new ArrayList<ServerInfo>();
+            for (ServerInfo serverInfo : getProxy().getServers().values()) {
+                if (serverLoader.loadEntity(new ObjectId(serverInfo.getName())) == null) {
+                    toRemove.add(serverInfo);
+                }
+            }
+
+            for (ServerInfo serverInfo: toRemove) {
+                getProxy().getServers().remove(serverInfo.getName());
+            }
+
+            for (MN2ServerType serverType : bungee.getBungeeType().getServerTypes()) {
+                ArrayList<MN2Server> servers = serverLoader.typeServers(serverType);
+                servers.stream().filter(server -> getProxy().getServers().containsKey(server.get_id().toString()) == false).forEach(server -> {
+                    ServerInfo serverInfo = getProxy().constructServerInfo(server.get_id().toString(), new InetSocketAddress(server.getNode().getAddress(), server.getPort()), "", false);
+                    getProxy().getServers().put(serverInfo.getName(), serverInfo);
+                });
+            }
         }, 10, 10, TimeUnit.SECONDS);
     }
 
