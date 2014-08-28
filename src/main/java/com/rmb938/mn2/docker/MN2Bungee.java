@@ -25,6 +25,7 @@ public class MN2Bungee extends Plugin {
     private BungeeLoader bungeeLoader;
     private ServerLoader serverLoader;
     private ServerTypeLoader serverTypeLoader;
+    private PlayerLoader playerLoader;
 
     public ServerLoader getServerLoader() {
         return serverLoader;
@@ -32,6 +33,14 @@ public class MN2Bungee extends Plugin {
 
     public ServerTypeLoader getServerTypeLoader() {
         return serverTypeLoader;
+    }
+
+    public PlayerLoader getPlayerLoader() {
+        return playerLoader;
+    }
+
+    public com.rmb938.mn2.docker.db.entity.MN2Bungee getBungee() {
+        return bungee;
     }
 
     @Override
@@ -103,6 +112,7 @@ public class MN2Bungee extends Plugin {
             NodeLoader nodeLoader = new NodeLoader(mongoDatabase, bungeeTypeLoader);
             bungeeLoader = new BungeeLoader(mongoDatabase, bungeeTypeLoader, nodeLoader);
             serverLoader = new ServerLoader(mongoDatabase, nodeLoader, serverTypeLoader);
+            playerLoader = new PlayerLoader(mongoDatabase, serverTypeLoader, bungeeTypeLoader);
 
             bungee = bungeeLoader.loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
             if (bungee == null) {
