@@ -162,7 +162,7 @@ public class MN2Bungee extends Plugin {
                     getProxy().getServers().remove(serverInfo.getName());
                 }
 
-                for (MN2ServerType serverType : localBungee.getBungeeType().getServerTypes()) {
+                for (MN2ServerType serverType : localBungee.getBungeeType().getServerTypes().keySet()) {
                     ArrayList<MN2Server> servers = serverLoader.getTypeServers(serverType);
                     servers.stream().filter(server -> getProxy().getServers().containsKey(server.get_id().toString()) == false).forEach(server -> {
                         if (server.getPort() > 0 && server.getLastUpdate() > System.currentTimeMillis()-60000) {
