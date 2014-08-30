@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MN2Bungee extends Plugin {
 
-    private com.rmb938.mn2.docker.db.entity.MN2Bungee bungee;
+    //private com.rmb938.mn2.docker.db.entity.MN2Bungee bungee;
     private BungeeLoader bungeeLoader;
     private ServerLoader serverLoader;
     private ServerTypeLoader serverTypeLoader;
@@ -40,7 +40,7 @@ public class MN2Bungee extends Plugin {
     }
 
     public com.rmb938.mn2.docker.db.entity.MN2Bungee getBungee() {
-        return bungee;
+        return bungeeLoader.loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
     }
 
     @Override
@@ -114,8 +114,7 @@ public class MN2Bungee extends Plugin {
             serverLoader = new ServerLoader(mongoDatabase, nodeLoader, serverTypeLoader);
             playerLoader = new PlayerLoader(mongoDatabase, serverTypeLoader, bungeeTypeLoader);
 
-            bungee = bungeeLoader.loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
-            if (bungee == null) {
+            if (getBungee() == null) {
                 getLogger().severe("Could not find bungee data");
                 getProxy().stop();
                 return;
@@ -128,7 +127,7 @@ public class MN2Bungee extends Plugin {
             new PlayerListener(this);
 
             getProxy().getScheduler().schedule(plugin, () -> {
-                com.rmb938.mn2.docker.db.entity.MN2Bungee localBungee = bungeeLoader.loadEntity(bungee.get_id());
+                com.rmb938.mn2.docker.db.entity.MN2Bungee localBungee = getBungee();
                 if (localBungee == null) {
                     getLogger().severe("Couldn't find bungee data stopping bungee");
                     getProxy().stop();
@@ -144,8 +143,8 @@ public class MN2Bungee extends Plugin {
                     getProxy().stop();
                     return;
                 }
-                bungee.setLastUpdate(System.currentTimeMillis());
-                bungeeLoader.saveEntity(bungee);
+                localBungee.setLastUpdate(System.currentTimeMillis());
+                bungeeLoader.saveEntity(localBungee);
 
                 ArrayList<ServerInfo> toRemove = new ArrayList<ServerInfo>();
                 for (ServerInfo serverInfo : getProxy().getServers().values()) {
@@ -163,7 +162,7 @@ public class MN2Bungee extends Plugin {
                     getProxy().getServers().remove(serverInfo.getName());
                 }
 
-                for (MN2ServerType serverType : bungee.getBungeeType().getServerTypes()) {
+                for (MN2ServerType serverType : localBungee.getBungeeType().getServerTypes()) {
                     ArrayList<MN2Server> servers = serverLoader.getTypeServers(serverType);
                     servers.stream().filter(server -> getProxy().getServers().containsKey(server.get_id().toString()) == false).forEach(server -> {
                         if (server.getPort() > 0 && server.getLastUpdate() > System.currentTimeMillis()-60000) {
@@ -183,8 +182,10 @@ public class MN2Bungee extends Plugin {
         getLogger().info("Stopping MN2 Bungee");
         getProxy().getScheduler().cancel(this);
 
-        bungee.setLastUpdate(0);
-        bungeeLoader.saveEntity(bungee);
+        com.rmb938.mn2.docker.db.entity.MN2Bungee localBungee = getBungee();
+
+        localBungee.setLastUpdate(0);
+        bungeeLoader.saveEntity(localBungee);
     }
 
 }

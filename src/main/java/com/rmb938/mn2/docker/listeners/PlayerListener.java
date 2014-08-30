@@ -1,9 +1,12 @@
 package com.rmb938.mn2.docker.listeners;
 
 import com.rmb938.mn2.docker.MN2Bungee;
+import com.rmb938.mn2.docker.MN2ReconnectHandler;
 import com.rmb938.mn2.docker.db.entity.MN2Server;
 import net.md_5.bungee.api.ServerPing;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ProxyPingEvent;
+import net.md_5.bungee.api.event.ServerKickEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
@@ -36,5 +39,21 @@ public class PlayerListener implements Listener {
         serverPing.setVersion(event.getResponse().getVersion());
         serverPing.setFavicon(event.getResponse().getFaviconObject());
         event.setResponse(serverPing);
+    }
+
+    @EventHandler
+    public void onServerKick(ServerKickEvent event) {
+
+        ServerInfo newServer = ((MN2ReconnectHandler)plugin.getProxy().getReconnectHandler()).getSimilarServer(event.getPlayer(), event.getKickedFrom());
+
+        if (newServer != null) {
+            event.getPlayer().sendMessage(event.getKickReasonComponent());
+        } else {
+            event.setKickReasonComponent(event.getKickReasonComponent());
+            return;
+        }
+
+        event.setCancelled(true);
+        event.setCancelServer(newServer);
     }
 }

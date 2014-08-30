@@ -39,6 +39,37 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         return serverInfo;
     }
 
+    public ServerInfo getSimilarServer(ProxiedPlayer player, ServerInfo serverInfo) {
+        if (serverInfo == null) {
+            return getDefault(player);
+        }
+        MN2Server server = plugin.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
+        if (server == null) {
+            return null;
+        }
+        MN2ServerType serverType = server.getServerType();
+        if (serverType == null) {
+            return null;
+        }
+
+        com.rmb938.mn2.docker.db.entity.MN2Bungee bungee = plugin.getBungee();
+        boolean allowRejoin = false;
+        for (MN2ServerType serverType1 : bungee.getBungeeType().getServerTypes().keySet()) {
+            if (serverType1.get_id().equals(serverType.get_id())) {
+                allowRejoin = bungee.getBungeeType().getServerTypes().get(serverType1);
+                break;
+            }
+        }
+
+        if (allowRejoin) {
+            server = getEmptiestServer(plugin, serverType);
+        } else {
+            return getDefault(player);
+        }
+
+        return plugin.getProxy().getServerInfo(server.get_id().toString());
+    }
+
     private static MN2Server getEmptiestServer(MN2Bungee plugin, MN2ServerType serverType) {
         ArrayList<MN2Server> servers = plugin.getServerLoader().getTypeServers(serverType);
         if (servers.isEmpty()) {
@@ -86,9 +117,21 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         ServerInfo serverInfo = null;
 
         if (player.getLastServerTypes().get(plugin.getBungee().getBungeeType()) != null) {
-            MN2Server server = MN2ReconnectHandler.getEmptiestServer(plugin, player.getLastServerTypes().get(plugin.getBungee().getBungeeType()));
-            if (server != null) {
-                serverInfo = plugin.getProxy().getServerInfo(server.get_id().toString());
+            MN2ServerType serverType = player.getLastServerTypes().get(plugin.getBungee().getBungeeType());
+            com.rmb938.mn2.docker.db.entity.MN2Bungee bungee = plugin.getBungee();
+            boolean allowRejoin = false;
+            for (MN2ServerType serverType1 : bungee.getBungeeType().getServerTypes().keySet()) {
+                if (serverType1.get_id().equals(serverType.get_id())) {
+                    allowRejoin = bungee.getBungeeType().getServerTypes().get(serverType1);
+                    break;
+                }
+            }
+
+            if (allowRejoin == true) {
+                MN2Server server = MN2ReconnectHandler.getEmptiestServer(plugin, serverType);
+                if (server != null) {
+                    serverInfo = plugin.getProxy().getServerInfo(server.get_id().toString());
+                }
             }
         }
 
@@ -116,8 +159,7 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         }
         ServerInfo serverInfo = proxiedPlayer.getServer().getInfo();
         MN2Server server = plugin.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
-
-        if (server != null && server.getServerType() != null && server.getServerType().isAllowRejoin() == true) {
+        if (server != null && server.getServerType() != null) {
             player.getLastServerTypes().put(plugin.getBungee().getBungeeType(), server.getServerType());
         } else {
             String defaultServer = proxiedPlayer.getPendingConnection().getListener().getDefaultServer();
