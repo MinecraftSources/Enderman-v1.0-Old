@@ -44,9 +44,9 @@ public class CommandList extends Command {
                 }
                 online += mn2Server.getPlayers().size();
                 if (mn2Server.getServerType() != null) {
-                    sender.sendMessage(new TextComponent(ChatColor.GREEN + "[" + mn2Server.getServerType().getName() + "," + mn2Server.getNumber() + "] (" + mn2Server.getPlayers().size() + "): " + Util.format(players, ChatColor.RESET + ", ")));
+                    sender.sendMessage(new TextComponent(ChatColor.GREEN + "[" + mn2Server.getServerType().getName() + "." + mn2Server.getNumber() + "] "+ChatColor.GOLD+"(" + mn2Server.getPlayers().size() + "): "+ChatColor.RESET + Util.format(players, ChatColor.RESET + ", ")));
                 } else {
-                    sender.sendMessage(new TextComponent(ChatColor.GREEN + "[NULL" + mn2Server.getNumber() + "] (" + mn2Server.getPlayers().size() + "): " + Util.format(players, ChatColor.RESET + ", ")));
+                    sender.sendMessage(new TextComponent(ChatColor.GREEN + "[NULL." + mn2Server.getNumber() + "] "+ChatColor.GOLD+"(" + mn2Server.getPlayers().size() + "): "+ChatColor.RESET + Util.format(players, ChatColor.RESET + ", ")));
                 }
             } catch (Exception ex) {
                 sender.sendMessage(new TextComponent(ChatColor.GREEN + "[" + server.getName() + "] (" + server.getPlayers().size() + "): " + Util.format(players, ChatColor.RESET + ", ")));
