@@ -3,6 +3,7 @@ package com.rmb938.mn2.docker;
 import com.mongodb.ServerAddress;
 import com.rabbitmq.client.Address;
 import com.rmb938.mn2.docker.commands.CommandList;
+import com.rmb938.mn2.docker.commands.CommandServer;
 import com.rmb938.mn2.docker.db.database.*;
 import com.rmb938.mn2.docker.db.entity.MN2Server;
 import com.rmb938.mn2.docker.db.entity.MN2ServerType;
@@ -130,6 +131,7 @@ public class MN2Bungee extends Plugin {
             new PluginListener(this);
 
             getProxy().getPluginManager().registerCommand(this, new CommandList(this));
+            getProxy().getPluginManager().registerCommand(this, new CommandServer(this));
 
             getProxy().getScheduler().schedule(plugin, () -> {
                 com.rmb938.mn2.docker.db.entity.MN2Bungee localBungee = getBungee();
