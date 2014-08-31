@@ -28,6 +28,10 @@ public class CommandList extends Command {
     @Override
     public void execute(CommandSender sender, String[] args) {
         int online = 0;
+        int onlineNetwork = 0;
+        for (MN2Server server : plugin.getServerLoader().getServers()) {
+            onlineNetwork += server.getPlayers().size();
+        }
         for (ServerInfo server : ProxyServer.getInstance().getServers().values()) {
             if (!server.canAccess(sender)) {
                 continue;
@@ -40,7 +44,7 @@ public class CommandList extends Command {
             try {
                 MN2Server mn2Server = plugin.getServerLoader().loadEntity(new ObjectId(server.getName()));
                 if (mn2Server == null) {
-                    throw new Exception("");//to break out and show the regular server format
+                    throw new Exception();//to break out and show the regular server format
                 }
                 online += mn2Server.getPlayers().size();
                 if (mn2Server.getServerType() != null) {
@@ -49,10 +53,12 @@ public class CommandList extends Command {
                     sender.sendMessage(new TextComponent(ChatColor.GREEN + "[NULL." + mn2Server.getNumber() + "] "+ChatColor.GOLD+"(" + mn2Server.getPlayers().size() + "): "+ChatColor.RESET + Util.format(players, ChatColor.RESET + ", ")));
                 }
             } catch (Exception ex) {
+                online += server.getPlayers().size();
                 sender.sendMessage(new TextComponent(ChatColor.GREEN + "[" + server.getName() + "] (" + server.getPlayers().size() + "): " + Util.format(players, ChatColor.RESET + ", ")));
             }
         }
         sender.sendMessage(new TextComponent("Total Players on Bungee: " + plugin.getProxy().getOnlineCount()));
         sender.sendMessage(new TextComponent("Total Players on Bungee Type: "+online));
+        sender.sendMessage(new TextComponent("Total Players on Network: "+onlineNetwork));
     }
 }
