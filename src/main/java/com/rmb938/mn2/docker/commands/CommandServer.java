@@ -38,7 +38,20 @@ public class CommandServer extends Command implements TabExecutor {
         ProxiedPlayer player = (ProxiedPlayer) sender;
         Map<String, ServerInfo> servers = ProxyServer.getInstance().getServers();
         if (args.length == 0) {
-            player.sendMessage(ProxyServer.getInstance().getTranslation("current_server") + player.getServer().getInfo().getName());
+            String serverName;
+            try {
+                MN2Server mn2Server = plugin.getServerLoader().loadEntity(new ObjectId(player.getServer().getInfo().getName()));
+                if (mn2Server == null) {
+                    throw new Exception();
+                }
+                if (mn2Server.getServerType() == null) {
+                    throw new Exception();
+                }
+                serverName = mn2Server.getServerType().getName()+"."+mn2Server.getNumber();
+            } catch (Exception ex) {
+                serverName = player.getServer().getInfo().getName();
+            }
+            player.sendMessage(ProxyServer.getInstance().getTranslation("current_server") + serverName);
             TextComponent serverList = new TextComponent(ProxyServer.getInstance().getTranslation("server_list"));
             serverList.setColor(ChatColor.GOLD);
             boolean first = true;
@@ -49,7 +62,10 @@ public class CommandServer extends Command implements TabExecutor {
                     try {
                         MN2Server mn2Server = plugin.getServerLoader().loadEntity(new ObjectId(server.getName()));
                         if (mn2Server == null) {
-                            throw new Exception("");
+                            throw new Exception();
+                        }
+                        if (mn2Server.getServerType() == null) {
+                            throw new Exception();
                         }
                         serverTextComponent = new TextComponent(first ? mn2Server.getServerType().getName() + "." + mn2Server.getNumber() : ", " + mn2Server.getServerType().getName() + "." + mn2Server.getNumber());
                         count = mn2Server.getPlayers().size();
