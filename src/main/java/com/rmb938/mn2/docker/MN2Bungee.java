@@ -2,12 +2,14 @@ package com.rmb938.mn2.docker;
 
 import com.mongodb.ServerAddress;
 import com.rabbitmq.client.Address;
+import com.rmb938.mn2.docker.commands.CommandList;
 import com.rmb938.mn2.docker.db.database.*;
 import com.rmb938.mn2.docker.db.entity.MN2Server;
 import com.rmb938.mn2.docker.db.entity.MN2ServerType;
 import com.rmb938.mn2.docker.db.mongo.MongoDatabase;
 import com.rmb938.mn2.docker.db.rabbitmq.RabbitMQ;
 import com.rmb938.mn2.docker.listeners.PlayerListener;
+import com.rmb938.mn2.docker.listeners.PluginListener;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.bson.types.ObjectId;
@@ -111,8 +113,8 @@ public class MN2Bungee extends Plugin {
             BungeeTypeLoader bungeeTypeLoader = new BungeeTypeLoader(mongoDatabase, pluginLoader, serverTypeLoader);
             NodeLoader nodeLoader = new NodeLoader(mongoDatabase, bungeeTypeLoader);
             bungeeLoader = new BungeeLoader(mongoDatabase, bungeeTypeLoader, nodeLoader);
-            serverLoader = new ServerLoader(mongoDatabase, nodeLoader, serverTypeLoader);
             playerLoader = new PlayerLoader(mongoDatabase, serverTypeLoader, bungeeTypeLoader);
+            serverLoader = new ServerLoader(mongoDatabase, nodeLoader, serverTypeLoader, playerLoader);
 
             if (getBungee() == null) {
                 getLogger().severe("Could not find bungee data");
@@ -125,6 +127,9 @@ public class MN2Bungee extends Plugin {
             getProxy().setReconnectHandler(new MN2ReconnectHandler(this));
 
             new PlayerListener(this);
+            new PluginListener(this);
+
+            getProxy().getPluginManager().registerCommand(this, new CommandList(this));
 
             getProxy().getScheduler().schedule(plugin, () -> {
                 com.rmb938.mn2.docker.db.entity.MN2Bungee localBungee = getBungee();

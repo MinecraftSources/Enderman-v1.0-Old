@@ -1,5 +1,6 @@
 package com.rmb938.mn2.docker;
 
+import com.rmb938.mn2.docker.db.entity.MN2BungeeType;
 import com.rmb938.mn2.docker.db.entity.MN2Player;
 import com.rmb938.mn2.docker.db.entity.MN2Server;
 import com.rmb938.mn2.docker.db.entity.MN2ServerType;
@@ -62,7 +63,7 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         }
 
         if (allowRejoin) {
-            server = getEmptiestServer(plugin, serverType);
+            server = getServerWithRoom(plugin, serverType, serverInfo);
         } else {
             return getDefault(player);
         }
@@ -70,18 +71,74 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         return plugin.getProxy().getServerInfo(server.get_id().toString());
     }
 
-    private static MN2Server getEmptiestServer(MN2Bungee plugin, MN2ServerType serverType) {
+    private static MN2Server getServerWithRoom(MN2Bungee plugin, MN2ServerType serverType, ServerInfo lastServer) {
         ArrayList<MN2Server> servers = plugin.getServerLoader().getTypeServers(serverType);
-        if (servers.isEmpty()) {
-            return null;
-        }
-        MN2Server emptiest = servers.remove(0);
+        MN2Server toRemove = null;
         for (MN2Server server : servers) {
-            if (server.getPlayers().size() < emptiest.getPlayers().size()) {
-                emptiest = server;
+            if (server.get_id().toString().equals(lastServer.getName())) {
+                toRemove = server;
+                break;
             }
         }
-        return emptiest;
+        if (toRemove != null) {
+            servers.remove(toRemove);
+        }
+        if (servers.isEmpty()) {
+            plugin.getLogger().info("Emptiest Server Empty "+serverType.getName());
+            return null;
+        }
+        ArrayList<MN2Server> roomServers = new ArrayList<>();
+        for (MN2Server server : servers) {
+            if (server.getPort() == -1) {
+                plugin.getLogger().info("Port -1 Skipping "+server.get_id().toString());
+                continue;
+            }
+            if (server.getLastUpdate() == 0) {
+                plugin.getLogger().info("LAst Update 0 Skipping "+server.get_id().toString());
+                continue;
+            }
+            if (plugin.getProxy().getServerInfo(server.get_id().toString()) != null) {
+                if ((server.getServerType().getPlayers() - server.getPlayers().size()) > 0) {
+                    roomServers.add(server);
+                }
+            }
+        }
+        if (roomServers.isEmpty()) {
+            plugin.getLogger().info("Cannot find a empty server "+serverType.getName());
+            return null;
+        }
+        int random = (int) (Math.random() * roomServers.size());
+        return roomServers.get(random);
+    }
+
+    public static MN2Server getServerWithRoom(MN2Bungee plugin, MN2ServerType serverType) {
+        ArrayList<MN2Server> servers = plugin.getServerLoader().getTypeServers(serverType);
+        if (servers.isEmpty()) {
+            plugin.getLogger().info("Emptiest Server Empty "+serverType.getName());
+            return null;
+        }
+        ArrayList<MN2Server> roomServers = new ArrayList<>();
+        for (MN2Server server : servers) {
+            if (server.getPort() == -1) {
+                plugin.getLogger().info("Port -1 Skipping "+server.get_id().toString());
+                continue;
+            }
+            if (server.getLastUpdate() == 0) {
+                plugin.getLogger().info("LAst Update 0 Skipping "+server.get_id().toString());
+                continue;
+            }
+            if (plugin.getProxy().getServerInfo(server.get_id().toString()) != null) {
+                if ((server.getServerType().getPlayers() - server.getPlayers().size()) > 0) {
+                    roomServers.add(server);
+                }
+            }
+        }
+        if (roomServers.isEmpty()) {
+            plugin.getLogger().info("Cannot find a empty server "+serverType.getName());
+            return null;
+        }
+        int random = (int) (Math.random() * roomServers.size());
+        return roomServers.get(random);
     }
 
     public static ServerInfo getForcedHost(PendingConnection connection) {
@@ -92,9 +149,9 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         String forced = connection.getListener().getForcedHosts().get(connection.getVirtualHost().getHostString());
 
         if (forced == null && connection.getListener().isForceDefault()) {
-            forced = connection.getListener().getDefaultServer();
+            return null;
         }
-        MN2Server server = getEmptiestServer(plugin, plugin.getServerTypeLoader().loadEntity(new ObjectId(forced)));
+        MN2Server server = getServerWithRoom(plugin, plugin.getServerTypeLoader().loadEntity(new ObjectId(forced)));
 
         return plugin.getProxy().getServerInfo(server.get_id().toString());
     }
@@ -116,22 +173,27 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         }
         ServerInfo serverInfo = null;
 
-        if (player.getLastServerTypes().get(plugin.getBungee().getBungeeType()) != null) {
-            MN2ServerType serverType = player.getLastServerTypes().get(plugin.getBungee().getBungeeType());
-            com.rmb938.mn2.docker.db.entity.MN2Bungee bungee = plugin.getBungee();
-            boolean allowRejoin = false;
-            for (MN2ServerType serverType1 : bungee.getBungeeType().getServerTypes().keySet()) {
-                if (serverType1.get_id().equals(serverType.get_id())) {
-                    allowRejoin = bungee.getBungeeType().getServerTypes().get(serverType1);
-                    break;
-                }
-            }
+        MN2BungeeType bungeeType = plugin.getBungee().getBungeeType();
+        for (MN2BungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
+            if (bungeeType1.get_id().equals(bungeeType.get_id())) {
+                MN2ServerType serverType = player.getLastServerTypes().get(bungeeType1);
+                if (serverType != null) {
+                    boolean allowRejoin = false;
+                    for (MN2ServerType serverType1 : bungeeType.getServerTypes().keySet()) {
+                        if (serverType1.get_id().equals(serverType.get_id())) {
+                            allowRejoin = bungeeType.getServerTypes().get(serverType1);
+                            break;
+                        }
+                    }
 
-            if (allowRejoin == true) {
-                MN2Server server = MN2ReconnectHandler.getEmptiestServer(plugin, serverType);
-                if (server != null) {
-                    serverInfo = plugin.getProxy().getServerInfo(server.get_id().toString());
+                    if (allowRejoin == true) {
+                        MN2Server server = MN2ReconnectHandler.getServerWithRoom(plugin, serverType);
+                        if (server != null) {
+                            serverInfo = plugin.getProxy().getServerInfo(server.get_id().toString());
+                        }
+                    }
                 }
+                break;
             }
         }
 
@@ -144,11 +206,16 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
 
     private ServerInfo getDefault(ProxiedPlayer proxiedPlayer) {
         String defaultServer = proxiedPlayer.getPendingConnection().getListener().getDefaultServer();
-        MN2Server server = getEmptiestServer(plugin, plugin.getServerTypeLoader().loadEntity(new ObjectId(defaultServer)));
+        MN2Server server = getServerWithRoom(plugin, plugin.getServerTypeLoader().loadEntity(new ObjectId(defaultServer)));
         if (server == null) {
+            plugin.getLogger().severe("Null emptiest server");
             return null;
         }
-        return plugin.getProxy().getServerInfo(server.get_id().toString());
+        ServerInfo serverInfo = plugin.getProxy().getServerInfo(server.get_id().toString());
+        if (serverInfo == null) {
+            plugin.getLogger().warning("Null server info");
+        }
+        return serverInfo;
     }
 
     @Override
@@ -160,12 +227,26 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         ServerInfo serverInfo = proxiedPlayer.getServer().getInfo();
         MN2Server server = plugin.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
         if (server != null && server.getServerType() != null) {
-            player.getLastServerTypes().put(plugin.getBungee().getBungeeType(), server.getServerType());
+            MN2BungeeType bungeeType = plugin.getBungee().getBungeeType();
+
+            for (MN2BungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
+                if (bungeeType1.get_id().equals(bungeeType.get_id())) {
+                    bungeeType = bungeeType1;
+                }
+            }
+            player.getLastServerTypes().put(bungeeType, server.getServerType());
         } else {
             String defaultServer = proxiedPlayer.getPendingConnection().getListener().getDefaultServer();
             MN2ServerType serverType = plugin.getServerTypeLoader().loadEntity(new ObjectId(defaultServer));
             if (serverType != null) {
-                player.getLastServerTypes().put(plugin.getBungee().getBungeeType(), serverType);
+                MN2BungeeType bungeeType = plugin.getBungee().getBungeeType();
+
+                for (MN2BungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
+                    if (bungeeType1.get_id().equals(bungeeType.get_id())) {
+                        bungeeType = bungeeType1;
+                    }
+                }
+                player.getLastServerTypes().put(bungeeType, serverType);
             }
         }
         plugin.getPlayerLoader().saveEntity(player);
