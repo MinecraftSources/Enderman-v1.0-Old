@@ -1,6 +1,7 @@
 package com.rmb938.mn2.docker.commands;
 
 import com.rmb938.mn2.docker.MN2Bungee;
+import com.rmb938.mn2.docker.db.entity.MN2Player;
 import com.rmb938.mn2.docker.db.entity.MN2Server;
 import net.md_5.bungee.Util;
 import net.md_5.bungee.api.ChatColor;
@@ -15,6 +16,7 @@ import org.bson.types.ObjectId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CommandList extends Command {
 
@@ -37,9 +39,6 @@ public class CommandList extends Command {
                 continue;
             }
             List<String> players = new ArrayList<>();
-            for (ProxiedPlayer player : server.getPlayers()) {
-                players.add(player.getDisplayName());
-            }
             Collections.sort(players, String.CASE_INSENSITIVE_ORDER);
             try {
                 MN2Server mn2Server = plugin.getServerLoader().loadEntity(new ObjectId(server.getName()));
@@ -48,8 +47,10 @@ public class CommandList extends Command {
                 }
                 online += mn2Server.getPlayers().size();
                 if (mn2Server.getServerType() != null) {
+                    players.addAll(mn2Server.getPlayers().stream().map(MN2Player::getPlayerName).collect(Collectors.toList()));
                     sender.sendMessage(new TextComponent(ChatColor.GREEN + "[" + mn2Server.getServerType().getName() + "." + mn2Server.getNumber() + "] "+ChatColor.GOLD+"(" + mn2Server.getPlayers().size() + "): "+ChatColor.RESET + Util.format(players, ChatColor.RESET + ", ")));
                 } else {
+                    players.addAll(server.getPlayers().stream().map(ProxiedPlayer::getDisplayName).collect(Collectors.toList()));
                     sender.sendMessage(new TextComponent(ChatColor.GREEN + "[NULL." + mn2Server.getNumber() + "] "+ChatColor.GOLD+"(" + mn2Server.getPlayers().size() + "): "+ChatColor.RESET + Util.format(players, ChatColor.RESET + ", ")));
                 }
             } catch (Exception ex) {

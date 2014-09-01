@@ -6,7 +6,9 @@ import com.rmb938.mn2.docker.db.entity.MN2Server;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ProxyPingEvent;
+import net.md_5.bungee.api.event.ServerDisconnectEvent;
 import net.md_5.bungee.api.event.ServerKickEvent;
+import net.md_5.bungee.api.event.ServerSwitchEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
@@ -43,7 +45,7 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onServerKick(ServerKickEvent event) {
-
+        plugin.getLogger().info("Server Kick");
         ServerInfo newServer = ((MN2ReconnectHandler)plugin.getProxy().getReconnectHandler()).getSimilarServer(event.getPlayer(), event.getKickedFrom());
 
         if (newServer != null) {
@@ -53,7 +55,18 @@ public class PlayerListener implements Listener {
             return;
         }
 
+        plugin.getLogger().info("New Server "+newServer);
         event.setCancelled(true);
         event.setCancelServer(newServer);
+    }
+
+    @EventHandler
+    public void onServerDisconnect(ServerDisconnectEvent event) {
+        plugin.getLogger().info("Server Disconnect");
+    }
+
+    @EventHandler
+    public void onServerSwitch(ServerSwitchEvent event) {
+        plugin.getLogger().info("Server Switch");
     }
 }
