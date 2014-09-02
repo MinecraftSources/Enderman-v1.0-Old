@@ -1,9 +1,10 @@
-package io.minestack.docker.listeners;
+package io.minestack.bungee.listeners;
 
-import io.minestack.db.entity.MN2Server;
-import io.minestack.db.entity.MN2ServerType;
-import io.minestack.docker.MN2Bungee;
-import io.minestack.docker.MN2ReconnectHandler;
+import io.minestack.bungee.MN2ReconnectHandler;
+import io.minestack.bungee.Titanium46;
+import io.minestack.db.Uranium;
+import io.minestack.db.entity.UServer;
+import io.minestack.db.entity.UServerType;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PluginMessageEvent;
@@ -18,9 +19,9 @@ import java.util.logging.Level;
 
 public class PluginListener implements Listener {
 
-    private final MN2Bungee plugin;
+    private final Titanium46 plugin;
 
-    public PluginListener(MN2Bungee plugin) {
+    public PluginListener(Titanium46 plugin) {
         this.plugin = plugin;
     }
 
@@ -50,9 +51,9 @@ public class PluginListener implements Listener {
                             player.connect(serverInfo);
                         }
                     } else {
-                        MN2ServerType serverType = plugin.getServerTypeLoader().getType(serverTypeName);
+                        UServerType serverType = Uranium.getServerTypeLoader().getType(serverTypeName);
                         if (serverType != null) {
-                            MN2Server server = MN2ReconnectHandler.getServerWithRoom(plugin, serverType);
+                            UServer server = MN2ReconnectHandler.getServerWithRoom(plugin, serverType);
                             if (server != null) {
                                 ServerInfo serverInfo = plugin.getProxy().getServerInfo(server.get_id().toString());
                                 if (serverInfo != null) {

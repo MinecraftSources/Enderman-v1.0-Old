@@ -1,8 +1,9 @@
-package io.minestack.docker.commands;
+package io.minestack.bungee.commands;
 
-import io.minestack.db.entity.MN2Player;
-import io.minestack.db.entity.MN2Server;
-import io.minestack.docker.MN2Bungee;
+import io.minestack.bungee.Titanium46;
+import io.minestack.db.Uranium;
+import io.minestack.db.entity.UPlayer;
+import io.minestack.db.entity.UServer;
 import net.md_5.bungee.Util;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
@@ -20,9 +21,9 @@ import java.util.stream.Collectors;
 
 public class CommandList extends Command {
 
-    private final MN2Bungee plugin;
+    private final Titanium46 plugin;
 
-    public CommandList(MN2Bungee plugin) {
+    public CommandList(Titanium46 plugin) {
         super("glist", "bungeecord.command.list");
         this.plugin = plugin;
     }
@@ -31,7 +32,7 @@ public class CommandList extends Command {
     public void execute(CommandSender sender, String[] args) {
         int online = 0;
         int onlineNetwork = 0;
-        for (MN2Server server : plugin.getServerLoader().getServers()) {
+        for (UServer server : Uranium.getServerLoader().getServers()) {
             onlineNetwork += server.getPlayers().size();
         }
         for (ServerInfo server : ProxyServer.getInstance().getServers().values()) {
@@ -41,13 +42,13 @@ public class CommandList extends Command {
             List<String> players = new ArrayList<>();
             Collections.sort(players, String.CASE_INSENSITIVE_ORDER);
             try {
-                MN2Server mn2Server = plugin.getServerLoader().loadEntity(new ObjectId(server.getName()));
+                UServer mn2Server = Uranium.getServerLoader().loadEntity(new ObjectId(server.getName()));
                 if (mn2Server == null) {
                     throw new Exception();//to break out and show the regular server format
                 }
                 online += mn2Server.getPlayers().size();
                 if (mn2Server.getServerType() != null) {
-                    players.addAll(mn2Server.getPlayers().stream().map(MN2Player::getPlayerName).collect(Collectors.toList()));
+                    players.addAll(mn2Server.getPlayers().stream().map(UPlayer::getPlayerName).collect(Collectors.toList()));
                     sender.sendMessage(new TextComponent(ChatColor.GREEN + "[" + mn2Server.getServerType().getName() + "." + mn2Server.getNumber() + "] "+ChatColor.GOLD+"(" + mn2Server.getPlayers().size() + "): "+ChatColor.RESET + Util.format(players, ChatColor.RESET + ", ")));
                 } else {
                     players.addAll(server.getPlayers().stream().map(ProxiedPlayer::getDisplayName).collect(Collectors.toList()));

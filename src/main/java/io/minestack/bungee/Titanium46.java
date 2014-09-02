@@ -1,56 +1,36 @@
-package io.minestack.docker;
+package io.minestack.bungee;
 
 import com.mongodb.ServerAddress;
 import com.rabbitmq.client.Address;
-import io.minestack.db.database.*;
-import io.minestack.db.entity.MN2Server;
-import io.minestack.db.entity.MN2ServerType;
-import io.minestack.db.mongo.MongoDatabase;
-import io.minestack.db.rabbitmq.RabbitMQ;
-import io.minestack.docker.commands.CommandList;
-import io.minestack.docker.commands.CommandServer;
-import io.minestack.docker.listeners.PlayerListener;
-import io.minestack.docker.listeners.PluginListener;
+import io.minestack.db.Uranium;
+import io.minestack.db.entity.UBungee;
+import io.minestack.db.entity.UServer;
+import io.minestack.db.entity.UServerType;
+import io.minestack.bungee.commands.CommandList;
+import io.minestack.bungee.commands.CommandServer;
+import io.minestack.bungee.listeners.PlayerListener;
+import io.minestack.bungee.listeners.PluginListener;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.bson.types.ObjectId;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class MN2Bungee extends Plugin {
+public class Titanium46 extends Plugin {
 
-    //private io.minestack.docker.db.entity.MN2Bungee bungee;
-    private BungeeLoader bungeeLoader;
-    private ServerLoader serverLoader;
-    private ServerTypeLoader serverTypeLoader;
-    private PlayerLoader playerLoader;
-
-    public ServerLoader getServerLoader() {
-        return serverLoader;
-    }
-
-    public ServerTypeLoader getServerTypeLoader() {
-        return serverTypeLoader;
-    }
-
-    public PlayerLoader getPlayerLoader() {
-        return playerLoader;
-    }
-
-    public io.minestack.db.entity.MN2Bungee getBungee() {
-        return bungeeLoader.loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
+    public UBungee getBungee() {
+        return Uranium.getBungeeLoader().loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
     }
 
     @Override
     public void onEnable() {
         final Plugin plugin = this;
         getProxy().getScheduler().runAsync(this, () -> {
-            getLogger().info("Starting MN2 Bukkit");
+            getLogger().info("Starting Titanium46");
 
             String hosts = System.getenv("MONGO_HOSTS");
 
@@ -71,14 +51,6 @@ public class MN2Bungee extends Plugin {
                 }
             }
 
-            if (mongoAddresses.isEmpty()) {
-                getLogger().severe("No valid mongo addresses");
-                getProxy().stop();
-                return;
-            }
-            getLogger().info("Setting up mongo database mn2");
-            MongoDatabase mongoDatabase = new MongoDatabase(mongoAddresses, "mn2");
-
             hosts = System.getenv("RABBITMQ_HOSTS");
             String username = System.getenv("RABBITMQ_USERNAME");
             String password = System.getenv("RABBITMQ_PASSWORD");
@@ -93,29 +65,7 @@ public class MN2Bungee extends Plugin {
                 }
             }
 
-            if (rabbitAddresses.isEmpty()) {
-                getLogger().severe("No valid RabbitMQ addresses");
-                return;
-            }
-
-            RabbitMQ rabbitMQ = null;
-            try {
-                getLogger().info("Setting up RabbitMQ");
-                rabbitMQ = new RabbitMQ(rabbitAddresses, username, password);
-            } catch (IOException e) {
-                e.printStackTrace();
-                getProxy().stop();
-                return;
-            }
-
-            PluginLoader pluginLoader = new PluginLoader(mongoDatabase);
-            WorldLoader worldLoader = new WorldLoader(mongoDatabase);
-            serverTypeLoader = new ServerTypeLoader(mongoDatabase, pluginLoader, worldLoader);
-            BungeeTypeLoader bungeeTypeLoader = new BungeeTypeLoader(mongoDatabase, pluginLoader, serverTypeLoader);
-            NodeLoader nodeLoader = new NodeLoader(mongoDatabase, bungeeTypeLoader);
-            bungeeLoader = new BungeeLoader(mongoDatabase, bungeeTypeLoader, nodeLoader);
-            playerLoader = new PlayerLoader(mongoDatabase, serverTypeLoader, bungeeTypeLoader);
-            serverLoader = new ServerLoader(mongoDatabase, nodeLoader, serverTypeLoader, playerLoader);
+            Uranium.initDatabase(mongoAddresses, rabbitAddresses, username, password);
 
             if (getBungee() == null) {
                 getLogger().severe("Could not find bungee data");
@@ -134,7 +84,7 @@ public class MN2Bungee extends Plugin {
             getProxy().getPluginManager().registerCommand(this, new CommandServer(this));
 
             getProxy().getScheduler().schedule(plugin, () -> {
-                io.minestack.db.entity.MN2Bungee localBungee = getBungee();
+                UBungee localBungee = getBungee();
                 if (localBungee == null) {
                     getLogger().severe("Couldn't find bungee data stopping bungee");
                     getProxy().stop();
@@ -151,11 +101,11 @@ public class MN2Bungee extends Plugin {
                     return;
                 }
                 localBungee.setLastUpdate(System.currentTimeMillis());
-                bungeeLoader.saveEntity(localBungee);
+                Uranium.getBungeeLoader().saveEntity(localBungee);
 
                 ArrayList<ServerInfo> toRemove = new ArrayList<ServerInfo>();
                 for (ServerInfo serverInfo : getProxy().getServers().values()) {
-                    MN2Server server = serverLoader.loadEntity(new ObjectId(serverInfo.getName()));
+                    UServer server = Uranium.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
                     if (server == null) {
                         getLogger().info("Removing "+serverInfo.getName());
                         toRemove.add(serverInfo);
@@ -169,8 +119,8 @@ public class MN2Bungee extends Plugin {
                     getProxy().getServers().remove(serverInfo.getName());
                 }
 
-                for (MN2ServerType serverType : localBungee.getBungeeType().getServerTypes().keySet()) {
-                    ArrayList<MN2Server> servers = serverLoader.getTypeServers(serverType);
+                for (UServerType serverType : localBungee.getBungeeType().getServerTypes().keySet()) {
+                    ArrayList<UServer> servers = Uranium.getServerLoader().getTypeServers(serverType);
                     servers.stream().filter(server -> getProxy().getServers().containsKey(server.get_id().toString()) == false).forEach(server -> {
                         if (server.getPort() > 0 && server.getLastUpdate() > System.currentTimeMillis()-60000) {
                             getLogger().info("Adding "+server.getServerType().getName()+"."+server.getNumber());
@@ -186,13 +136,13 @@ public class MN2Bungee extends Plugin {
 
     @Override
     public void onDisable() {
-        getLogger().info("Stopping MN2 Bungee");
+        getLogger().info("Stopping Titanium46");
         getProxy().getScheduler().cancel(this);
 
-        io.minestack.db.entity.MN2Bungee localBungee = getBungee();
+        UBungee localBungee = getBungee();
 
         localBungee.setLastUpdate(0);
-        bungeeLoader.saveEntity(localBungee);
+        Uranium.getBungeeLoader().saveEntity(localBungee);
     }
 
 }

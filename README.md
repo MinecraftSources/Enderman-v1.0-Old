@@ -1,4 +1,4 @@
-MN2-Bungee
+Titanium46
 ==========
 
-Bungee plugin for MN2-Docker
+Bungee plugin for Minestack

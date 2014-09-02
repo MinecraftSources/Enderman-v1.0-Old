@@ -1,10 +1,11 @@
-package io.minestack.docker.commands;
+package io.minestack.bungee.commands;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import io.minestack.db.entity.MN2Server;
-import io.minestack.docker.MN2Bungee;
+import io.minestack.bungee.Titanium46;
+import io.minestack.db.Uranium;
+import io.minestack.db.entity.UServer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -23,9 +24,9 @@ import java.util.Map;
 
 public class CommandServer extends Command implements TabExecutor {
 
-    private final MN2Bungee plugin;
+    private final Titanium46 plugin;
 
-    public CommandServer(MN2Bungee plugin) {
+    public CommandServer(Titanium46 plugin) {
         super("server", "bungeecord.command.server");
         this.plugin = plugin;
     }
@@ -40,7 +41,7 @@ public class CommandServer extends Command implements TabExecutor {
         if (args.length == 0) {
             String serverName;
             try {
-                MN2Server mn2Server = plugin.getServerLoader().loadEntity(new ObjectId(player.getServer().getInfo().getName()));
+                UServer mn2Server = Uranium.getServerLoader().loadEntity(new ObjectId(player.getServer().getInfo().getName()));
                 if (mn2Server == null) {
                     throw new Exception();
                 }
@@ -60,7 +61,7 @@ public class CommandServer extends Command implements TabExecutor {
                     TextComponent serverTextComponent;
                     int count;
                     try {
-                        MN2Server mn2Server = plugin.getServerLoader().loadEntity(new ObjectId(server.getName()));
+                        UServer mn2Server = Uranium.getServerLoader().loadEntity(new ObjectId(server.getName()));
                         if (mn2Server == null) {
                             throw new Exception();
                         }
@@ -87,7 +88,7 @@ public class CommandServer extends Command implements TabExecutor {
             ServerInfo server = servers.get(args[0]);
             if (server == null) {
                 String[] info = args[0].split("\\.");
-                MN2Server mn2Server = plugin.getServerLoader().getServer(plugin.getServerTypeLoader().getType(info[0]), Integer.parseInt(info[1]));
+                UServer mn2Server = Uranium.getServerLoader().getServer(Uranium.getServerTypeLoader().getType(info[0]), Integer.parseInt(info[1]));
                 if (mn2Server == null) {
                     player.sendMessage(ProxyServer.getInstance().getTranslation("no_server"));
                     return;
@@ -108,9 +109,9 @@ public class CommandServer extends Command implements TabExecutor {
 
     @Override
     public Iterable<String> onTabComplete(final CommandSender sender, String[] args) {
-        return (args.length != 0) ? Collections.EMPTY_LIST : Iterables.transform(Iterables.filter(plugin.getServerLoader().getServers(), new Predicate<MN2Server>() {
+        return (args.length != 0) ? Collections.EMPTY_LIST : Iterables.transform(Iterables.filter(Uranium.getServerLoader().getServers(), new Predicate<UServer>() {
             @Override
-            public boolean apply(MN2Server input) {
+            public boolean apply(UServer input) {
                 ServerInfo server = plugin.getProxy().getServerInfo(input.get_id().toString());
                 if (server != null) {
                     return server.canAccess(sender);
@@ -118,9 +119,9 @@ public class CommandServer extends Command implements TabExecutor {
                     return false;
                 }
             }
-        }), new Function<MN2Server, String>() {
+        }), new Function<UServer, String>() {
             @Override
-            public String apply(MN2Server input) {
+            public String apply(UServer input) {
                 if (input.getServerType() != null) {
                     return input.getServerType().getName()+"."+input.getNumber();
                 } else {

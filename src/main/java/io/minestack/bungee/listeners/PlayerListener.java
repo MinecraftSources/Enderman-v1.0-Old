@@ -1,8 +1,9 @@
-package io.minestack.docker.listeners;
+package io.minestack.bungee.listeners;
 
-import io.minestack.db.entity.MN2Server;
-import io.minestack.docker.MN2Bungee;
-import io.minestack.docker.MN2ReconnectHandler;
+import io.minestack.bungee.MN2ReconnectHandler;
+import io.minestack.bungee.Titanium46;
+import io.minestack.db.Uranium;
+import io.minestack.db.entity.UServer;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ProxyPingEvent;
@@ -16,19 +17,19 @@ import java.util.ArrayList;
 
 public class PlayerListener implements Listener {
 
-    private final MN2Bungee plugin;
+    private final Titanium46 plugin;
 
-    public PlayerListener(MN2Bungee plugin) {
+    public PlayerListener(Titanium46 plugin) {
         this.plugin = plugin;
         plugin.getProxy().getPluginManager().registerListener(plugin, this);
     }
 
     @EventHandler
     public void onPing(ProxyPingEvent event) {
-        ArrayList<MN2Server> servers = plugin.getServerLoader().getServers();
+        ArrayList<UServer> servers = Uranium.getServerLoader().getServers();
         int max = 0;
         int online = 0;
-        for (MN2Server server : servers) {
+        for (UServer server : servers) {
             if (server.getPort() > 0 && server.getLastUpdate() > System.currentTimeMillis()-60000) {
                 max += server.getServerType().getPlayers();
                 online += server.getPlayers().size();

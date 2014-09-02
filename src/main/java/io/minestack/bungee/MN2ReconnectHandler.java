@@ -1,9 +1,7 @@
-package io.minestack.docker;
+package io.minestack.bungee;
 
-import io.minestack.db.entity.MN2BungeeType;
-import io.minestack.db.entity.MN2Player;
-import io.minestack.db.entity.MN2Server;
-import io.minestack.db.entity.MN2ServerType;
+import io.minestack.db.Uranium;
+import io.minestack.db.entity.*;
 import net.md_5.bungee.api.AbstractReconnectHandler;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -16,9 +14,9 @@ import java.util.ArrayList;
 
 public class MN2ReconnectHandler extends AbstractReconnectHandler {
 
-    private final MN2Bungee plugin;
+    private final Titanium46 plugin;
 
-    public MN2ReconnectHandler(MN2Bungee plugin) {
+    public MN2ReconnectHandler(Titanium46 plugin) {
         this.plugin = plugin;
     }
 
@@ -44,18 +42,18 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         if (serverInfo == null) {
             return getDefault(player);
         }
-        MN2Server server = plugin.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
+        UServer server = Uranium.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
         if (server == null) {
             return null;
         }
-        MN2ServerType serverType = server.getServerType();
+        UServerType serverType = server.getServerType();
         if (serverType == null) {
             return null;
         }
 
-        io.minestack.db.entity.MN2Bungee bungee = plugin.getBungee();
+        UBungee bungee = plugin.getBungee();
         boolean allowRejoin = false;
-        for (MN2ServerType serverType1 : bungee.getBungeeType().getServerTypes().keySet()) {
+        for (UServerType serverType1 : bungee.getBungeeType().getServerTypes().keySet()) {
             if (serverType1.get_id().equals(serverType.get_id())) {
                 allowRejoin = bungee.getBungeeType().getServerTypes().get(serverType1);
                 break;
@@ -71,10 +69,10 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         return plugin.getProxy().getServerInfo(server.get_id().toString());
     }
 
-    private static MN2Server getServerWithRoom(MN2Bungee plugin, MN2ServerType serverType, ServerInfo lastServer) {
-        ArrayList<MN2Server> servers = plugin.getServerLoader().getTypeServers(serverType);
-        MN2Server toRemove = null;
-        for (MN2Server server : servers) {
+    private static UServer getServerWithRoom(Titanium46 plugin, UServerType serverType, ServerInfo lastServer) {
+        ArrayList<UServer> servers = Uranium.getServerLoader().getTypeServers(serverType);
+        UServer toRemove = null;
+        for (UServer server : servers) {
             if (server.get_id().toString().equals(lastServer.getName())) {
                 toRemove = server;
                 break;
@@ -87,8 +85,8 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
             plugin.getLogger().info("Emptiest Server Empty "+serverType.getName());
             return null;
         }
-        ArrayList<MN2Server> roomServers = new ArrayList<>();
-        for (MN2Server server : servers) {
+        ArrayList<UServer> roomServers = new ArrayList<>();
+        for (UServer server : servers) {
             if (server.getPort() == -1) {
                 plugin.getLogger().info("Port -1 Skipping "+server.get_id().toString());
                 continue;
@@ -111,14 +109,14 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         return roomServers.get(random);
     }
 
-    public static MN2Server getServerWithRoom(MN2Bungee plugin, MN2ServerType serverType) {
-        ArrayList<MN2Server> servers = plugin.getServerLoader().getTypeServers(serverType);
+    public static UServer getServerWithRoom(Titanium46 plugin, UServerType serverType) {
+        ArrayList<UServer> servers = Uranium.getServerLoader().getTypeServers(serverType);
         if (servers.isEmpty()) {
             plugin.getLogger().info("Emptiest Server Empty "+serverType.getName());
             return null;
         }
-        ArrayList<MN2Server> roomServers = new ArrayList<>();
-        for (MN2Server server : servers) {
+        ArrayList<UServer> roomServers = new ArrayList<>();
+        for (UServer server : servers) {
             if (server.getPort() == -1) {
                 plugin.getLogger().info("Port -1 Skipping "+server.get_id().toString());
                 continue;
@@ -142,7 +140,7 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
     }
 
     public static ServerInfo getForcedHost(PendingConnection connection) {
-        MN2Bungee plugin = (MN2Bungee) ProxyServer.getInstance().getPluginManager().getPlugin("MN2Bungee");
+        Titanium46 plugin = (Titanium46) ProxyServer.getInstance().getPluginManager().getPlugin("Titanium46");
         if (connection.getVirtualHost() == null) {
             return null;
         }
@@ -151,35 +149,35 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
         if (forced == null && connection.getListener().isForceDefault()) {
             return null;
         }
-        MN2Server server = getServerWithRoom(plugin, plugin.getServerTypeLoader().loadEntity(new ObjectId(forced)));
+        UServer server = getServerWithRoom(plugin, Uranium.getServerTypeLoader().loadEntity(new ObjectId(forced)));
 
         return plugin.getProxy().getServerInfo(server.get_id().toString());
     }
 
     @Override
     protected ServerInfo getStoredServer(ProxiedPlayer proxiedPlayer) {
-        MN2Player player = plugin.getPlayerLoader().loadPlayer(proxiedPlayer.getUniqueId());
+        UPlayer player = Uranium.getPlayerLoader().loadPlayer(proxiedPlayer.getUniqueId());
         if (player == null) {
-            player = new MN2Player();
+            player = new UPlayer();
             player.setPlayerName(proxiedPlayer.getName());
             player.setUuid(proxiedPlayer.getUniqueId());
-            ObjectId objectId = plugin.getPlayerLoader().insertEntity(player);
-            player = plugin.getPlayerLoader().loadEntity(objectId);
+            ObjectId objectId = Uranium.getPlayerLoader().insertEntity(player);
+            player = Uranium.getPlayerLoader().loadEntity(objectId);
         } else {
             if (player.getPlayerName().equals(proxiedPlayer.getName()) == false) {
                 player.setPlayerName(proxiedPlayer.getName());
-                plugin.getPlayerLoader().saveEntity(player);
+                Uranium.getPlayerLoader().saveEntity(player);
             }
         }
         ServerInfo serverInfo = null;
 
-        MN2BungeeType bungeeType = plugin.getBungee().getBungeeType();
-        for (MN2BungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
+        UBungeeType bungeeType = plugin.getBungee().getBungeeType();
+        for (UBungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
             if (bungeeType1.get_id().equals(bungeeType.get_id())) {
-                MN2ServerType serverType = player.getLastServerTypes().get(bungeeType1);
+                UServerType serverType = player.getLastServerTypes().get(bungeeType1);
                 if (serverType != null) {
                     boolean allowRejoin = false;
-                    for (MN2ServerType serverType1 : bungeeType.getServerTypes().keySet()) {
+                    for (UServerType serverType1 : bungeeType.getServerTypes().keySet()) {
                         if (serverType1.get_id().equals(serverType.get_id())) {
                             allowRejoin = bungeeType.getServerTypes().get(serverType1);
                             break;
@@ -187,7 +185,7 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
                     }
 
                     if (allowRejoin == true) {
-                        MN2Server server = MN2ReconnectHandler.getServerWithRoom(plugin, serverType);
+                        UServer server = MN2ReconnectHandler.getServerWithRoom(plugin, serverType);
                         if (server != null) {
                             serverInfo = plugin.getProxy().getServerInfo(server.get_id().toString());
                         }
@@ -206,7 +204,7 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
 
     private ServerInfo getDefault(ProxiedPlayer proxiedPlayer) {
         String defaultServer = proxiedPlayer.getPendingConnection().getListener().getDefaultServer();
-        MN2Server server = getServerWithRoom(plugin, plugin.getServerTypeLoader().loadEntity(new ObjectId(defaultServer)));
+        UServer server = getServerWithRoom(plugin, Uranium.getServerTypeLoader().loadEntity(new ObjectId(defaultServer)));
         if (server == null) {
             plugin.getLogger().severe("Null emptiest server");
             return null;
@@ -220,16 +218,16 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
 
     @Override
     public void setServer(ProxiedPlayer proxiedPlayer) {
-        MN2Player player = plugin.getPlayerLoader().loadPlayer(proxiedPlayer.getUniqueId());
+        UPlayer player = Uranium.getPlayerLoader().loadPlayer(proxiedPlayer.getUniqueId());
         if (player == null) {
             return;
         }
         ServerInfo serverInfo = proxiedPlayer.getServer().getInfo();
-        MN2Server server = plugin.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
+        UServer server = Uranium.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
         if (server != null && server.getServerType() != null) {
-            MN2BungeeType bungeeType = plugin.getBungee().getBungeeType();
+            UBungeeType bungeeType = plugin.getBungee().getBungeeType();
 
-            for (MN2BungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
+            for (UBungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
                 if (bungeeType1.get_id().equals(bungeeType.get_id())) {
                     bungeeType = bungeeType1;
                 }
@@ -237,11 +235,11 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
             player.getLastServerTypes().put(bungeeType, server.getServerType());
         } else {
             String defaultServer = proxiedPlayer.getPendingConnection().getListener().getDefaultServer();
-            MN2ServerType serverType = plugin.getServerTypeLoader().loadEntity(new ObjectId(defaultServer));
+            UServerType serverType = Uranium.getServerTypeLoader().loadEntity(new ObjectId(defaultServer));
             if (serverType != null) {
-                MN2BungeeType bungeeType = plugin.getBungee().getBungeeType();
+                UBungeeType bungeeType = plugin.getBungee().getBungeeType();
 
-                for (MN2BungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
+                for (UBungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
                     if (bungeeType1.get_id().equals(bungeeType.get_id())) {
                         bungeeType = bungeeType1;
                     }
@@ -249,7 +247,7 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
                 player.getLastServerTypes().put(bungeeType, serverType);
             }
         }
-        plugin.getPlayerLoader().saveEntity(player);
+        Uranium.getPlayerLoader().saveEntity(player);
     }
 
     @Override
