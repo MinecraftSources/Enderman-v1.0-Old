@@ -1,16 +1,16 @@
-package com.rmb938.mn2.docker;
+package io.minestack.docker;
 
 import com.mongodb.ServerAddress;
 import com.rabbitmq.client.Address;
-import com.rmb938.mn2.docker.commands.CommandList;
-import com.rmb938.mn2.docker.commands.CommandServer;
-import com.rmb938.mn2.docker.db.database.*;
-import com.rmb938.mn2.docker.db.entity.MN2Server;
-import com.rmb938.mn2.docker.db.entity.MN2ServerType;
-import com.rmb938.mn2.docker.db.mongo.MongoDatabase;
-import com.rmb938.mn2.docker.db.rabbitmq.RabbitMQ;
-import com.rmb938.mn2.docker.listeners.PlayerListener;
-import com.rmb938.mn2.docker.listeners.PluginListener;
+import io.minestack.db.database.*;
+import io.minestack.db.entity.MN2Server;
+import io.minestack.db.entity.MN2ServerType;
+import io.minestack.db.mongo.MongoDatabase;
+import io.minestack.db.rabbitmq.RabbitMQ;
+import io.minestack.docker.commands.CommandList;
+import io.minestack.docker.commands.CommandServer;
+import io.minestack.docker.listeners.PlayerListener;
+import io.minestack.docker.listeners.PluginListener;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.bson.types.ObjectId;
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MN2Bungee extends Plugin {
 
-    //private com.rmb938.mn2.docker.db.entity.MN2Bungee bungee;
+    //private io.minestack.docker.db.entity.MN2Bungee bungee;
     private BungeeLoader bungeeLoader;
     private ServerLoader serverLoader;
     private ServerTypeLoader serverTypeLoader;
@@ -42,7 +42,7 @@ public class MN2Bungee extends Plugin {
         return playerLoader;
     }
 
-    public com.rmb938.mn2.docker.db.entity.MN2Bungee getBungee() {
+    public io.minestack.db.entity.MN2Bungee getBungee() {
         return bungeeLoader.loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
     }
 
@@ -134,7 +134,7 @@ public class MN2Bungee extends Plugin {
             getProxy().getPluginManager().registerCommand(this, new CommandServer(this));
 
             getProxy().getScheduler().schedule(plugin, () -> {
-                com.rmb938.mn2.docker.db.entity.MN2Bungee localBungee = getBungee();
+                io.minestack.db.entity.MN2Bungee localBungee = getBungee();
                 if (localBungee == null) {
                     getLogger().severe("Couldn't find bungee data stopping bungee");
                     getProxy().stop();
@@ -189,7 +189,7 @@ public class MN2Bungee extends Plugin {
         getLogger().info("Stopping MN2 Bungee");
         getProxy().getScheduler().cancel(this);
 
-        com.rmb938.mn2.docker.db.entity.MN2Bungee localBungee = getBungee();
+        io.minestack.db.entity.MN2Bungee localBungee = getBungee();
 
         localBungee.setLastUpdate(0);
         bungeeLoader.saveEntity(localBungee);

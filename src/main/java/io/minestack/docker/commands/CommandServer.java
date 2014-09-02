@@ -1,10 +1,10 @@
-package com.rmb938.mn2.docker.commands;
+package io.minestack.docker.commands;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.rmb938.mn2.docker.MN2Bungee;
-import com.rmb938.mn2.docker.db.entity.MN2Server;
+import io.minestack.db.entity.MN2Server;
+import io.minestack.docker.MN2Bungee;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;

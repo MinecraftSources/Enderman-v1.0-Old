@@ -1,9 +1,9 @@
-package com.rmb938.mn2.docker;
+package io.minestack.docker;
 
-import com.rmb938.mn2.docker.db.entity.MN2BungeeType;
-import com.rmb938.mn2.docker.db.entity.MN2Player;
-import com.rmb938.mn2.docker.db.entity.MN2Server;
-import com.rmb938.mn2.docker.db.entity.MN2ServerType;
+import io.minestack.db.entity.MN2BungeeType;
+import io.minestack.db.entity.MN2Player;
+import io.minestack.db.entity.MN2Server;
+import io.minestack.db.entity.MN2ServerType;
 import net.md_5.bungee.api.AbstractReconnectHandler;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -53,7 +53,7 @@ public class MN2ReconnectHandler extends AbstractReconnectHandler {
             return null;
         }
 
-        com.rmb938.mn2.docker.db.entity.MN2Bungee bungee = plugin.getBungee();
+        io.minestack.db.entity.MN2Bungee bungee = plugin.getBungee();
         boolean allowRejoin = false;
         for (MN2ServerType serverType1 : bungee.getBungeeType().getServerTypes().keySet()) {
             if (serverType1.get_id().equals(serverType.get_id())) {

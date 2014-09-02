@@ -1,8 +1,8 @@
-package com.rmb938.mn2.docker.listeners;
+package io.minestack.docker.listeners;
 
-import com.rmb938.mn2.docker.MN2Bungee;
-import com.rmb938.mn2.docker.MN2ReconnectHandler;
-import com.rmb938.mn2.docker.db.entity.MN2Server;
+import io.minestack.db.entity.MN2Server;
+import io.minestack.docker.MN2Bungee;
+import io.minestack.docker.MN2ReconnectHandler;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ProxyPingEvent;
