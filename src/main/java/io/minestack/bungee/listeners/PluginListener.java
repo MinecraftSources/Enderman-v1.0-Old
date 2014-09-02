@@ -1,10 +1,10 @@
 package io.minestack.bungee.listeners;
 
-import io.minestack.bungee.MN2ReconnectHandler;
-import io.minestack.bungee.Titanium46;
-import io.minestack.db.Uranium;
-import io.minestack.db.entity.UServer;
-import io.minestack.db.entity.UServerType;
+import io.minestack.bungee.Enderman;
+import io.minestack.bungee.ReconnectHandler;
+import io.minestack.db.DoubleChest;
+import io.minestack.db.entity.DCServer;
+import io.minestack.db.entity.DCServerType;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PluginMessageEvent;
@@ -19,9 +19,9 @@ import java.util.logging.Level;
 
 public class PluginListener implements Listener {
 
-    private final Titanium46 plugin;
+    private final Enderman plugin;
 
-    public PluginListener(Titanium46 plugin) {
+    public PluginListener(Enderman plugin) {
         this.plugin = plugin;
     }
 
@@ -51,9 +51,9 @@ public class PluginListener implements Listener {
                             player.connect(serverInfo);
                         }
                     } else {
-                        UServerType serverType = Uranium.getServerTypeLoader().getType(serverTypeName);
+                        DCServerType serverType = DoubleChest.getServerTypeLoader().getType(serverTypeName);
                         if (serverType != null) {
-                            UServer server = MN2ReconnectHandler.getServerWithRoom(plugin, serverType);
+                            DCServer server = ReconnectHandler.getServerWithRoom(plugin, serverType);
                             if (server != null) {
                                 ServerInfo serverInfo = plugin.getProxy().getServerInfo(server.get_id().toString());
                                 if (serverInfo != null) {

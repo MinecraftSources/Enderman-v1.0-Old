@@ -3,9 +3,9 @@ package io.minestack.bungee.commands;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import io.minestack.bungee.Titanium46;
-import io.minestack.db.Uranium;
-import io.minestack.db.entity.UServer;
+import io.minestack.bungee.Enderman;
+import io.minestack.db.DoubleChest;
+import io.minestack.db.entity.DCServer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -24,9 +24,9 @@ import java.util.Map;
 
 public class CommandServer extends Command implements TabExecutor {
 
-    private final Titanium46 plugin;
+    private final Enderman plugin;
 
-    public CommandServer(Titanium46 plugin) {
+    public CommandServer(Enderman plugin) {
         super("server", "bungeecord.command.server");
         this.plugin = plugin;
     }
@@ -41,7 +41,7 @@ public class CommandServer extends Command implements TabExecutor {
         if (args.length == 0) {
             String serverName;
             try {
-                UServer mn2Server = Uranium.getServerLoader().loadEntity(new ObjectId(player.getServer().getInfo().getName()));
+                DCServer mn2Server = DoubleChest.getServerLoader().loadEntity(new ObjectId(player.getServer().getInfo().getName()));
                 if (mn2Server == null) {
                     throw new Exception();
                 }
@@ -61,7 +61,7 @@ public class CommandServer extends Command implements TabExecutor {
                     TextComponent serverTextComponent;
                     int count;
                     try {
-                        UServer mn2Server = Uranium.getServerLoader().loadEntity(new ObjectId(server.getName()));
+                        DCServer mn2Server = DoubleChest.getServerLoader().loadEntity(new ObjectId(server.getName()));
                         if (mn2Server == null) {
                             throw new Exception();
                         }
@@ -88,7 +88,7 @@ public class CommandServer extends Command implements TabExecutor {
             ServerInfo server = servers.get(args[0]);
             if (server == null) {
                 String[] info = args[0].split("\\.");
-                UServer mn2Server = Uranium.getServerLoader().getServer(Uranium.getServerTypeLoader().getType(info[0]), Integer.parseInt(info[1]));
+                DCServer mn2Server = DoubleChest.getServerLoader().getServer(DoubleChest.getServerTypeLoader().getType(info[0]), Integer.parseInt(info[1]));
                 if (mn2Server == null) {
                     player.sendMessage(ProxyServer.getInstance().getTranslation("no_server"));
                     return;
@@ -109,9 +109,9 @@ public class CommandServer extends Command implements TabExecutor {
 
     @Override
     public Iterable<String> onTabComplete(final CommandSender sender, String[] args) {
-        return (args.length != 0) ? Collections.EMPTY_LIST : Iterables.transform(Iterables.filter(Uranium.getServerLoader().getServers(), new Predicate<UServer>() {
+        return (args.length != 0) ? Collections.EMPTY_LIST : Iterables.transform(Iterables.filter(DoubleChest.getServerLoader().getServers(), new Predicate<DCServer>() {
             @Override
-            public boolean apply(UServer input) {
+            public boolean apply(DCServer input) {
                 ServerInfo server = plugin.getProxy().getServerInfo(input.get_id().toString());
                 if (server != null) {
                     return server.canAccess(sender);
@@ -119,9 +119,9 @@ public class CommandServer extends Command implements TabExecutor {
                     return false;
                 }
             }
-        }), new Function<UServer, String>() {
+        }), new Function<DCServer, String>() {
             @Override
-            public String apply(UServer input) {
+            public String apply(DCServer input) {
                 if (input.getServerType() != null) {
                     return input.getServerType().getName()+"."+input.getNumber();
                 } else {

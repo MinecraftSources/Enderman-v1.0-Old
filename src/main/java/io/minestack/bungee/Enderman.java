@@ -2,10 +2,10 @@ package io.minestack.bungee;
 
 import com.mongodb.ServerAddress;
 import com.rabbitmq.client.Address;
-import io.minestack.db.Uranium;
-import io.minestack.db.entity.UBungee;
-import io.minestack.db.entity.UServer;
-import io.minestack.db.entity.UServerType;
+import io.minestack.db.DoubleChest;
+import io.minestack.db.entity.DCBungee;
+import io.minestack.db.entity.DCServer;
+import io.minestack.db.entity.DCServerType;
 import io.minestack.bungee.commands.CommandList;
 import io.minestack.bungee.commands.CommandServer;
 import io.minestack.bungee.listeners.PlayerListener;
@@ -20,17 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class Titanium46 extends Plugin {
+public class Enderman extends Plugin {
 
-    public UBungee getBungee() {
-        return Uranium.getBungeeLoader().loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
+    public DCBungee getBungee() {
+        return DoubleChest.getBungeeLoader().loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
     }
 
     @Override
     public void onEnable() {
         final Plugin plugin = this;
         getProxy().getScheduler().runAsync(this, () -> {
-            getLogger().info("Starting Titanium46");
+            getLogger().info("Starting Enderman");
 
             String hosts = System.getenv("MONGO_HOSTS");
 
@@ -65,7 +65,13 @@ public class Titanium46 extends Plugin {
                 }
             }
 
-            Uranium.initDatabase(mongoAddresses, rabbitAddresses, username, password);
+            try {
+                DoubleChest.initDatabase(mongoAddresses, rabbitAddresses, username, password);
+            } catch (Exception e) {
+                e.printStackTrace();
+                getProxy().stop();
+                return;
+            }
 
             if (getBungee() == null) {
                 getLogger().severe("Could not find bungee data");
@@ -75,7 +81,7 @@ public class Titanium46 extends Plugin {
 
             getProxy().getServers().clear();
 
-            getProxy().setReconnectHandler(new MN2ReconnectHandler(this));
+            getProxy().setReconnectHandler(new ReconnectHandler(this));
 
             new PlayerListener(this);
             new PluginListener(this);
@@ -84,7 +90,7 @@ public class Titanium46 extends Plugin {
             getProxy().getPluginManager().registerCommand(this, new CommandServer(this));
 
             getProxy().getScheduler().schedule(plugin, () -> {
-                UBungee localBungee = getBungee();
+                DCBungee localBungee = getBungee();
                 if (localBungee == null) {
                     getLogger().severe("Couldn't find bungee data stopping bungee");
                     getProxy().stop();
@@ -101,11 +107,11 @@ public class Titanium46 extends Plugin {
                     return;
                 }
                 localBungee.setLastUpdate(System.currentTimeMillis());
-                Uranium.getBungeeLoader().saveEntity(localBungee);
+                DoubleChest.getBungeeLoader().saveEntity(localBungee);
 
                 ArrayList<ServerInfo> toRemove = new ArrayList<ServerInfo>();
                 for (ServerInfo serverInfo : getProxy().getServers().values()) {
-                    UServer server = Uranium.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
+                    DCServer server = DoubleChest.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
                     if (server == null) {
                         getLogger().info("Removing "+serverInfo.getName());
                         toRemove.add(serverInfo);
@@ -119,8 +125,8 @@ public class Titanium46 extends Plugin {
                     getProxy().getServers().remove(serverInfo.getName());
                 }
 
-                for (UServerType serverType : localBungee.getBungeeType().getServerTypes().keySet()) {
-                    ArrayList<UServer> servers = Uranium.getServerLoader().getTypeServers(serverType);
+                for (DCServerType serverType : localBungee.getBungeeType().getServerTypes().keySet()) {
+                    ArrayList<DCServer> servers = DoubleChest.getServerLoader().getTypeServers(serverType);
                     servers.stream().filter(server -> getProxy().getServers().containsKey(server.get_id().toString()) == false).forEach(server -> {
                         if (server.getPort() > 0 && server.getLastUpdate() > System.currentTimeMillis()-60000) {
                             getLogger().info("Adding "+server.getServerType().getName()+"."+server.getNumber());
@@ -136,13 +142,13 @@ public class Titanium46 extends Plugin {
 
     @Override
     public void onDisable() {
-        getLogger().info("Stopping Titanium46");
+        getLogger().info("Stopping Enderman");
         getProxy().getScheduler().cancel(this);
 
-        UBungee localBungee = getBungee();
+        DCBungee localBungee = getBungee();
 
         localBungee.setLastUpdate(0);
-        Uranium.getBungeeLoader().saveEntity(localBungee);
+        DoubleChest.getBungeeLoader().saveEntity(localBungee);
     }
 
 }

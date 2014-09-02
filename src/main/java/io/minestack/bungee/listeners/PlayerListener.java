@@ -1,9 +1,9 @@
 package io.minestack.bungee.listeners;
 
-import io.minestack.bungee.MN2ReconnectHandler;
-import io.minestack.bungee.Titanium46;
-import io.minestack.db.Uranium;
-import io.minestack.db.entity.UServer;
+import io.minestack.bungee.Enderman;
+import io.minestack.bungee.ReconnectHandler;
+import io.minestack.db.DoubleChest;
+import io.minestack.db.entity.DCServer;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ProxyPingEvent;
@@ -17,19 +17,19 @@ import java.util.ArrayList;
 
 public class PlayerListener implements Listener {
 
-    private final Titanium46 plugin;
+    private final Enderman plugin;
 
-    public PlayerListener(Titanium46 plugin) {
+    public PlayerListener(Enderman plugin) {
         this.plugin = plugin;
         plugin.getProxy().getPluginManager().registerListener(plugin, this);
     }
 
     @EventHandler
     public void onPing(ProxyPingEvent event) {
-        ArrayList<UServer> servers = Uranium.getServerLoader().getServers();
+        ArrayList<DCServer> servers = DoubleChest.getServerLoader().getServers();
         int max = 0;
         int online = 0;
-        for (UServer server : servers) {
+        for (DCServer server : servers) {
             if (server.getPort() > 0 && server.getLastUpdate() > System.currentTimeMillis()-60000) {
                 max += server.getServerType().getPlayers();
                 online += server.getPlayers().size();
@@ -47,7 +47,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onServerKick(ServerKickEvent event) {
         plugin.getLogger().info("Server Kick");
-        ServerInfo newServer = ((MN2ReconnectHandler)plugin.getProxy().getReconnectHandler()).getSimilarServer(event.getPlayer(), event.getKickedFrom());
+        ServerInfo newServer = ((ReconnectHandler)plugin.getProxy().getReconnectHandler()).getSimilarServer(event.getPlayer(), event.getKickedFrom());
 
         if (newServer != null) {
             event.getPlayer().sendMessage(event.getKickReasonComponent());
