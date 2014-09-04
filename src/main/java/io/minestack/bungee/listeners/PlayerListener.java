@@ -46,6 +46,10 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onServerKick(ServerKickEvent event) {
+        if (event.getKickReason().toLowerCase().contains("kick") || event.getKickReason().toLowerCase().contains("ban")) {
+            return;
+        }
+
         plugin.getLogger().info("Server Kick");
         ServerInfo newServer = ((ReconnectHandler)plugin.getProxy().getReconnectHandler()).getSimilarServer(event.getPlayer(), event.getKickedFrom());
 
