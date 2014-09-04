@@ -92,7 +92,7 @@ public class ReconnectHandler extends AbstractReconnectHandler {
                 continue;
             }
             if (server.getLastUpdate() == 0) {
-                plugin.getLogger().info("LAst Update 0 Skipping "+server.get_id().toString());
+                plugin.getLogger().info("Last Update 0 Skipping "+server.get_id().toString());
                 continue;
             }
             if (plugin.getProxy().getServerInfo(server.get_id().toString()) != null) {

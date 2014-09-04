@@ -2,14 +2,14 @@ package io.minestack.bungee;
 
 import com.mongodb.ServerAddress;
 import com.rabbitmq.client.Address;
-import io.minestack.db.DoubleChest;
-import io.minestack.db.entity.DCBungee;
-import io.minestack.db.entity.DCServer;
-import io.minestack.db.entity.DCServerType;
 import io.minestack.bungee.commands.CommandList;
 import io.minestack.bungee.commands.CommandServer;
 import io.minestack.bungee.listeners.PlayerListener;
 import io.minestack.bungee.listeners.PluginListener;
+import io.minestack.db.DoubleChest;
+import io.minestack.db.entity.DCBungee;
+import io.minestack.db.entity.DCServer;
+import io.minestack.db.entity.DCServerType;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.bson.types.ObjectId;
@@ -129,8 +129,17 @@ public class Enderman extends Plugin {
                     ArrayList<DCServer> servers = DoubleChest.getServerLoader().getTypeServers(serverType);
                     servers.stream().filter(server -> getProxy().getServers().containsKey(server.get_id().toString()) == false).forEach(server -> {
                         if (server.getPort() > 0 && server.getLastUpdate() > System.currentTimeMillis()-60000) {
+
+                            String address = server.getNode().getAddress();
+                            int port = server.getPort();
+
+                            if (server.getNode().get_id().equals(localBungee.getNode().get_id())) {
+                                address = server.getContainerAddress();
+                                port = 25565;
+                            }
+
                             getLogger().info("Adding "+server.getServerType().getName()+"."+server.getNumber());
-                            ServerInfo serverInfo = getProxy().constructServerInfo(server.get_id().toString(), new InetSocketAddress(server.getNode().getAddress(), server.getPort()), "", false);
+                            ServerInfo serverInfo = getProxy().constructServerInfo(server.get_id().toString(), new InetSocketAddress(address, port), "", false);
                             getProxy().getServers().put(serverInfo.getName(), serverInfo);
                         }
                     });
