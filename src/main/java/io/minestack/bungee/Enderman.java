@@ -7,9 +7,10 @@ import io.minestack.bungee.commands.CommandServer;
 import io.minestack.bungee.listeners.PlayerListener;
 import io.minestack.bungee.listeners.PluginListener;
 import io.minestack.db.DoubleChest;
-import io.minestack.db.entity.DCBungee;
-import io.minestack.db.entity.DCServer;
-import io.minestack.db.entity.DCServerType;
+import io.minestack.db.entity.proxy.DCProxy;
+import io.minestack.db.entity.proxy.driver.bungee.DCBungee;
+import io.minestack.db.entity.server.DCServer;
+import io.minestack.db.entity.server.DCServerType;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.bson.types.ObjectId;
@@ -22,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Enderman extends Plugin {
 
-    public DCBungee getBungee() {
-        return DoubleChest.getBungeeLoader().loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
+    public DCProxy getDCProxy() {
+        return DoubleChest.getProxyLoader().loadEntity(new ObjectId(System.getenv("MY_BUNGEE_ID")));
     }
 
     @Override
@@ -73,7 +74,7 @@ public class Enderman extends Plugin {
                 return;
             }
 
-            if (getBungee() == null) {
+            if (getDCProxy() == null) {
                 getLogger().severe("Could not find bungee data");
                 getProxy().stop();
                 return;
@@ -90,24 +91,29 @@ public class Enderman extends Plugin {
             getProxy().getPluginManager().registerCommand(this, new CommandServer(this));
 
             getProxy().getScheduler().schedule(plugin, () -> {
-                DCBungee localBungee = getBungee();
-                if (localBungee == null) {
+                DCProxy localProxy = getDCProxy();
+                if (localProxy == null) {
                     getLogger().severe("Couldn't find bungee data stopping bungee");
                     getProxy().stop();
                     return;
                 }
-                if (localBungee.getNode() == null) {
+                if (localProxy.getNode() == null) {
                     getLogger().severe("Couldn't find node data stopping bungee");
                     getProxy().stop();
                     return;
                 }
-                if (localBungee.getBungeeType() == null) {
+                if (!(localProxy.getDriver() instanceof DCBungee)) {
+                    getLogger().severe("Proxy is not a bungee proxy");
+                    getProxy().stop();
+                    return;
+                }
+                if (localProxy.getProxyType() == null) {
                     getLogger().severe("Couldn't find type data stopping bungee");
                     getProxy().stop();
                     return;
                 }
-                localBungee.setLastUpdate(System.currentTimeMillis());
-                DoubleChest.getBungeeLoader().saveEntity(localBungee);
+                localProxy.setLastUpdate(System.currentTimeMillis());
+                DoubleChest.getProxyLoader().saveEntity(localProxy);
 
                 ArrayList<ServerInfo> toRemove = new ArrayList<ServerInfo>();
                 for (ServerInfo serverInfo : getProxy().getServers().values()) {
@@ -125,7 +131,7 @@ public class Enderman extends Plugin {
                     getProxy().getServers().remove(serverInfo.getName());
                 }
 
-                for (DCServerType serverType : localBungee.getBungeeType().getServerTypes().keySet()) {
+                for (DCServerType serverType : localProxy.getProxyType().getServerTypes().keySet()) {
                     ArrayList<DCServer> servers = DoubleChest.getServerLoader().getTypeServers(serverType);
                     servers.stream().filter(server -> getProxy().getServers().containsKey(server.get_id().toString()) == false).forEach(server -> {
                         if (server.getPort() > 0 && server.getLastUpdate() > System.currentTimeMillis()-60000) {
@@ -133,7 +139,7 @@ public class Enderman extends Plugin {
                             String address = server.getNode().getAddress();
                             int port = server.getPort();
 
-                            if (server.getNode().get_id().equals(localBungee.getNode().get_id())) {
+                            if (server.getNode().get_id().equals(localProxy.getNode().get_id())) {
                                 address = server.getContainerAddress();
                                 port = 25565;
                             }
@@ -154,10 +160,10 @@ public class Enderman extends Plugin {
         getLogger().info("Stopping Enderman");
         getProxy().getScheduler().cancel(this);
 
-        DCBungee localBungee = getBungee();
+        DCProxy localProxy = getDCProxy();
 
-        localBungee.setLastUpdate(0);
-        DoubleChest.getBungeeLoader().saveEntity(localBungee);
+        localProxy.setLastUpdate(0);
+        DoubleChest.getProxyLoader().saveEntity(localProxy);
     }
 
 }

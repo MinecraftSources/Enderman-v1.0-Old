@@ -3,7 +3,7 @@ package io.minestack.bungee.commands;
 import io.minestack.bungee.Enderman;
 import io.minestack.db.DoubleChest;
 import io.minestack.db.entity.DCPlayer;
-import io.minestack.db.entity.DCServer;
+import io.minestack.db.entity.server.DCServer;
 import net.md_5.bungee.Util;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;

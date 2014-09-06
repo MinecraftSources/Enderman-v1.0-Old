@@ -1,7 +1,11 @@
 package io.minestack.bungee;
 
 import io.minestack.db.DoubleChest;
-import io.minestack.db.entity.*;
+import io.minestack.db.entity.DCPlayer;
+import io.minestack.db.entity.proxy.DCProxy;
+import io.minestack.db.entity.proxy.DCProxyType;
+import io.minestack.db.entity.server.DCServer;
+import io.minestack.db.entity.server.DCServerType;
 import net.md_5.bungee.api.AbstractReconnectHandler;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -51,11 +55,11 @@ public class ReconnectHandler extends AbstractReconnectHandler {
             return null;
         }
 
-        DCBungee bungee = plugin.getBungee();
+        DCProxy proxy = plugin.getDCProxy();
         boolean allowRejoin = false;
-        for (DCServerType serverType1 : bungee.getBungeeType().getServerTypes().keySet()) {
+        for (DCServerType serverType1 : proxy.getProxyType().getServerTypes().keySet()) {
             if (serverType1.get_id().equals(serverType.get_id())) {
-                allowRejoin = bungee.getBungeeType().getServerTypes().get(serverType1);
+                allowRejoin = proxy.getProxyType().getServerTypes().get(serverType1);
                 break;
             }
         }
@@ -171,15 +175,15 @@ public class ReconnectHandler extends AbstractReconnectHandler {
         }
         ServerInfo serverInfo = null;
 
-        DCBungeeType bungeeType = plugin.getBungee().getBungeeType();
-        for (DCBungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
-            if (bungeeType1.get_id().equals(bungeeType.get_id())) {
-                DCServerType serverType = player.getLastServerTypes().get(bungeeType1);
+        DCProxyType proxyType = plugin.getDCProxy().getProxyType();
+        for (DCProxyType proxyType1 : player.getLastServerTypes().keySet()) {
+            if (proxyType1.get_id().equals(proxyType.get_id())) {
+                DCServerType serverType = player.getLastServerTypes().get(proxyType1);
                 if (serverType != null) {
                     boolean allowRejoin = false;
-                    for (DCServerType serverType1 : bungeeType.getServerTypes().keySet()) {
+                    for (DCServerType serverType1 : proxyType.getServerTypes().keySet()) {
                         if (serverType1.get_id().equals(serverType.get_id())) {
-                            allowRejoin = bungeeType.getServerTypes().get(serverType1);
+                            allowRejoin = proxyType.getServerTypes().get(serverType1);
                             break;
                         }
                     }
@@ -225,26 +229,26 @@ public class ReconnectHandler extends AbstractReconnectHandler {
         ServerInfo serverInfo = proxiedPlayer.getServer().getInfo();
         DCServer server = DoubleChest.getServerLoader().loadEntity(new ObjectId(serverInfo.getName()));
         if (server != null && server.getServerType() != null) {
-            DCBungeeType bungeeType = plugin.getBungee().getBungeeType();
+            DCProxyType proxyType = plugin.getDCProxy().getProxyType();
 
-            for (DCBungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
-                if (bungeeType1.get_id().equals(bungeeType.get_id())) {
-                    bungeeType = bungeeType1;
+            for (DCProxyType proxyType1 : player.getLastServerTypes().keySet()) {
+                if (proxyType1.get_id().equals(proxyType.get_id())) {
+                    proxyType = proxyType1;
                 }
             }
-            player.getLastServerTypes().put(bungeeType, server.getServerType());
+            player.getLastServerTypes().put(proxyType, server.getServerType());
         } else {
             String defaultServer = proxiedPlayer.getPendingConnection().getListener().getDefaultServer();
             DCServerType serverType = DoubleChest.getServerTypeLoader().loadEntity(new ObjectId(defaultServer));
             if (serverType != null) {
-                DCBungeeType bungeeType = plugin.getBungee().getBungeeType();
+                DCProxyType proxyType = plugin.getDCProxy().getProxyType();
 
-                for (DCBungeeType bungeeType1 : player.getLastServerTypes().keySet()) {
-                    if (bungeeType1.get_id().equals(bungeeType.get_id())) {
-                        bungeeType = bungeeType1;
+                for (DCProxyType proxyType1 : player.getLastServerTypes().keySet()) {
+                    if (proxyType1.get_id().equals(proxyType.get_id())) {
+                        proxyType = proxyType1;
                     }
                 }
-                player.getLastServerTypes().put(bungeeType, serverType);
+                player.getLastServerTypes().put(proxyType, serverType);
             }
         }
         DoubleChest.getPlayerLoader().saveEntity(player);

@@ -5,7 +5,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import io.minestack.bungee.Enderman;
 import io.minestack.db.DoubleChest;
-import io.minestack.db.entity.DCServer;
+import io.minestack.db.entity.server.DCServer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;

@@ -3,7 +3,7 @@ package io.minestack.bungee.listeners;
 import io.minestack.bungee.Enderman;
 import io.minestack.bungee.ReconnectHandler;
 import io.minestack.db.DoubleChest;
-import io.minestack.db.entity.DCServer;
+import io.minestack.db.entity.server.DCServer;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ProxyPingEvent;
